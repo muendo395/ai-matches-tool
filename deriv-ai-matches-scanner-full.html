@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Deriv AI Matches Scanner Pro</title>
+<style>
+  :root {
+    --bg: #0b0e14;
+    --card: #131823;
+    --card2: #1a2130;
+    --border: #263044;
+    --text: #f1f5f9;
+    --muted: #94a3b8;
+    --accent: #00e676;
+    --accent-dim: rgba(0, 230, 118, 0.14);
+    --warn: #ffab00;
+    --danger: #ff5252;
+    --blue: #38bdf8;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0;
+    padding: 12px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 14px;
+    line-height: 1.4;
+  }
+  .wrap { max-width: 520px; margin: 0 auto; }
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+  }
+  .title { font-weight: 800; font-size: 16px; letter-spacing: 0.3px; }
+  .title span { color: var(--accent); }
+  .badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: var(--card2);
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .badge.ok { color: var(--accent); border-color: var(--accent); background: var(--accent-dim); }
+  .badge.err { color: var(--danger); border-color: var(--danger); }
+
+  .controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .ctrl-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 10px;
+  }
+  .ctrl-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+  select, button {
+    width: 100%;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 9px 10px;
+    border: 1px solid var(--border);
+    background: var(--card2);
+    color: var(--text);
+    outline: none;
+  }
+  .btn-scan {
+    grid-column: 1 / -1;
+    background: var(--accent);
+    color: #04130a;
+    border: none;
+    font-size: 15px;
+    font-weight: 900;
+    padding: 13px;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(0, 230, 118, 0.25);
+  }
+  .btn-scan:disabled { opacity: 0.55; cursor: not-allowed; }
+
+  .hero {
+    background: linear-gradient(145deg, #131c2b, #0f1724);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+  .hero-market { font-size: 13px; color: var(--blue); font-weight: 700; margin-bottom: 4px; }
+  .hero-digit-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    margin: 8px 0;
+  }
+  .digit-circle {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: var(--accent-dim);
+    border: 2px solid var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    font-weight: 900;
+    color: var(--accent);
+    box-shadow: 0 0 20px rgba(0, 230, 118, 0.2);
+  }
+  .hero-stats { text-align: left; font-size: 12px; color: var(--muted); }
+  .hero-stats b { color: var(--text); }
+  .live-bar {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+  }
+  .tick-pill {
+    font-family: monospace;
+    font-size: 14px;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: var(--card2);
+  }
+  .tick-pill.hit {
+    background: var(--accent);
+    color: #04130a;
+    animation: pulse 0.5s ease;
+  }
+  @keyframes pulse { 0% { transform: scale(1.18); } 100% { transform: scale(1); } }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 10px;
+  }
+  .card-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .grid-digits {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+  }
+  .d-cell {
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 4px;
+    text-align: center;
+  }
+  .d-cell.top { border-color: var(--accent); background: var(--accent-dim); }
+  .d-cell.sec { border-color: var(--blue); }
+  .d-num { font-size: 16px; font-weight: 900; }
+  .d-score { font-size: 11px; color: var(--accent); font-weight: 700; }
+  .d-freq { font-size: 10px; color: var(--muted); }
+
+  .mkt-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+  }
+  .mkt-row:last-child { border-bottom: none; }
+  .log {
+    font-family: monospace;
+    font-size: 11px;
+    color: var(--muted);
+    background: #080a0f;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px;
+    max-height: 90px;
+    overflow-y: auto;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <div class="title">DERIV <span>AI MATCHES</span> PRO</div>
+    <div id="connBadge" class="badge">READY</div>
+  </div>
+
+  <div class="controls">
+    <div class="ctrl-box">
+      <div class="ctrl-label">Market Pool</div>
+      <select id="poolSel">
+        <option value="1s">1-Second Indices (5)</option>
+        <option value="all">All Volatility Indices (10)</option>
+      </select>
+    </div>
+    <div class="ctrl-box">
+      <div class="ctrl-label">AI Memory Window</div>
+      <select id="memSel">
+        <option value="150">150 Ticks (Fast)</option>
+        <option value="300" selected>300 Ticks (Balanced)</option>
+        <option value="600">600 Ticks (Deep)</option>
+        <option value="1000">1,000 Ticks (Max)</option>
+      </select>
+    </div>
+    <button id="scanBtn" class="btn-scan" onclick="runFullScan()">SCAN ALL MARKETS NOW</button>
+  </div>
+
+  <div class="hero">
+    <div id="heroMarket" class="hero-market">Tap SCAN to analyze live Deriv ticks</div>
+    <div class="hero-digit-row">
+      <div id="heroDigit" class="digit-circle">-</div>
+      <div class="hero-stats">
+        <div>AI Confidence: <b id="heroConf">--</b></div>
+        <div>Backup Digit: <b id="heroBackup">--</b></div>
+        <div>Markov Edge: <b id="heroMarkov">--</b></div>
+        <div>Cluster / Gap: <b id="heroCluster">--</b></div>
+      </div>
+    </div>
+    <div class="live-bar">
+      <span id="liveStatus">Live Feed: Idle</span>
+      <span id="liveTick" class="tick-pill">Digit: -</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <span>10-Digit AI Probability Matrix</span>
+      <span id="matrixSub">Top Market Breakdown</span>
+    </div>
+    <div id="digitMatrix" class="grid-digits"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <span>Cross-Market AI Leaderboard</span>
+      <span>Best Digit / Score</span>
+    </div>
+    <div id="marketBoard"><div style="color:var(--muted);font-size:12px;">No scan data yet.</div></div>
+  </div>
+
+  <div id="logBox" class="log">System ready. Tap SCAN ALL MARKETS NOW.</div>
+</div>
+
+<script>
+const MARKETS_1S = [
+  { sym: '1HZ10V', name: 'Volatility 10 (1s)' },
+  { sym: '1HZ25V', name: 'Volatility 25 (1s)' },
+  { sym: '1HZ50V', name: 'Volatility 50 (1s)' },
+  { sym: '1HZ75V', name: 'Volatility 75 (1s)' },
+  { sym: '1HZ100V', name: 'Volatility 100 (1s)' }
+];
+
+const MARKETS_STD = [
+  { sym: 'R_10', name: 'Volatility 10' },
+  { sym: 'R_25', name: 'Volatility 25' },
+  { sym: 'R_50', name: 'Volatility 50' },
+  { sym: 'R_75', name: 'Volatility 75' },
+  { sym: 'R_100', name: 'Volatility 100' }
+];
+
+const WS_ENDPOINTS = [
+  'wss://ws.derivws.com/websockets/v3?app_id=1089',
+  'wss://ws.binaryws.com/websockets/v3?app_id=1089'
+];
+
+let liveWs = null;
+let targetDigit = null;
+let hitCount = 0;
+let tickCount = 0;
+
+function log(msg) {
+  const el = document.getElementById('logBox');
+  const t = new Date().toLocaleTimeString();
+  el.innerHTML = `[${t}] ${msg}<br>` + el.innerHTML;
+}
+
+function setBadge(text, cls) {
+  const b = document.getElementById('connBadge');
+  b.textContent = text;
+  b.className = 'badge ' + (cls || '');
+}
+
+function extractDigit(quote, pipSize) {
+  const fixed = Number(quote).toFixed(pipSize || 2);
+  return parseInt(fixed.charAt(fixed.length - 1), 10);
+}
+
+function evaluateMarketAI(digits) {
+  const N = digits.length;
+  const last1 = digits[N - 1];
+  const last2 = digits[N - 2];
+
+  const freq = Array(10).fill(0);
+  const recent30 = Array(10).fill(0);
+  const m1Total = Array(10).fill(0);
+  const m1Next = Array.from({ length: 10 }, () => Array(10).fill(0));
+  const m2Total = Array.from({ length: 10 }, () => Array(10).fill(0));
+  const m2Next = Array.from({ length: 10 }, () => Array.from({ length: 10 }, () => Array(10).fill(0)));
+  const lastSeen = Array(10).fill(-1);
+
+  for (let i = 0; i < N; i++) {
+    const d = digits[i];
+    freq[d]++;
+    lastSeen[d] = i;
+    if (i >= N - 30) recent30[d]++;
+    if (i < N - 1) {
+      const nxt = digits[i + 1];
+      m1Total[d]++;
+      m1Next[d][nxt]++;
+    }
+    if (i < N - 2) {
+      const d2 = digits[i + 1];
+      const nxt2 = digits[i + 2];
+      m2Total[d][d2]++;
+      m2Next[d][d2][nxt2]++;
+    }
+  }
+
+  const expected = N * 0.1;
+  const stdDev = Math.sqrt(N * 0.1 * 0.9);
+  const scored = [];
+
+  for (let d = 0; d < 10; d++) {
+    // 1. 1st-Order Markov transition probability
+    const pM1 = m1Total[last1] > 0 ? (m1Next[last1][d] / m1Total[last1]) : 0.1;
+    const scoreM1 = Math.min(100, (pM1 / 0.22) * 100);
+
+    // 2. 2nd-Order Bigram transition probability
+    const bigramCount = m2Total[last2][last1];
+    const pM2 = bigramCount >= 2 ? (m2Next[last2][last1][d] / bigramCount) : pM1;
+    const scoreM2 = Math.min(100, (pM2 / 0.28) * 100);
+
+    // 3. 30-tick short-term cluster velocity
+    const pCluster = recent30[d] / Math.min(30, N);
+    const scoreCluster = Math.min(100, (pCluster / 0.23) * 100);
+
+    // 4. Z-Score deviation across full memory
+    const z = Math.abs((freq[d] - expected) / (stdDev || 1));
+    const scoreZ = Math.min(100, (z / 2.2) * 100);
+
+    // 5. Overdue gap pressure
+    const gap = lastSeen[d] === -1 ? N : (N - 1 - lastSeen[d]);
+    const scoreGap = Math.min(100, (gap / 22) * 100);
+
+    const composite = (
+      scoreM1 * 0.28 +
+      scoreM2 * 0.24 +
+      scoreCluster * 0.20 +
+      scoreZ * 0.16 +
+      scoreGap * 0.12
+    );
+
+    scored.push({
+      digit: d,
+      score: composite,
+      freqPct: ((freq[d] / N) * 100).toFixed(1),
+      m1Pct: (pM1 * 100).toFixed(1),
+      recentCount: recent30[d],
+      gap: gap
+    });
+  }
+
+  scored.sort((a, b) => b.score - a.score);
+  return {
+    best: scored[0],
+    second: scored[1],
+    all: scored,
+    lastDigit: last1
+  };
+}
+
+function fetchHistory(symbol, count) {
+  return new Promise((resolve, reject) => {
+    let epIdx = 0;
+    let settled = false;
+
+    function tryConnect() {
+      if (epIdx >= WS_ENDPOINTS.length) {
+        if (!settled) { settled = true; reject(new Error('All endpoints failed for ' + symbol)); }
+        return;
+      }
+      const ws = new WebSocket(WS_ENDPOINTS[epIdx++]);
+      const timer = setTimeout(() => {
+        try { ws.close(); } catch (e) {}
+        if (!settled) tryConnect();
+      }, 6500);
+
+      ws.onopen = () => {
+        ws.send(JSON.stringify({
+          ticks_history: symbol,
+          adjust_start_time: 1,
+          count: count,
+          end: 'latest',
+          style: 'ticks'
+        }));
+      };
+
+      ws.onmessage = (evt) => {
+        clearTimeout(timer);
+        try {
+          const data = JSON.parse(evt.data);
+          if (data.error) {
+            ws.close();
+            if (!settled) { settled = true; reject(new Error(data.error.message)); }
+            return;
+          }
+          if (data.history && data.history.prices) {
+            const pip = data.pip_size || 2;
+            const digits = data.history.prices.map(p => extractDigit(p, pip));
+            ws.close();
+            if (!settled) { settled = true; resolve({ digits, pip }); }
+          }
+        } catch (err) {
+          ws.close();
+          if (!settled) { settled = true; reject(err); }
+        }
+      };
+
+      ws.onerror = () => {
+        clearTimeout(timer);
+        try { ws.close(); } catch (e) {}
+        if (!settled) tryConnect();
+      };
+    }
+
+    tryConnect();
+  });
+}
+
+function startLiveStream(symbol, name, digit, pipSize) {
+  if (liveWs) {
+    try { liveWs.close(); } catch (e) {}
+    liveWs = null;
+  }
+  targetDigit = digit;
+  hitCount = 0;
+  tickCount = 0;
+
+  document.getElementById('liveStatus').textContent = `Live: ${name}`;
+  const pill = document.getElementById('liveTick');
+  pill.textContent = 'Connecting...';
+  pill.className = 'tick-pill';
+
+  const ws = new WebSocket(WS_ENDPOINTS[0]);
+  liveWs = ws;
+
+  ws.onopen = () => {
+    ws.send(JSON.stringify({ ticks: symbol, subscribe: 1 }));
+    log(`Subscribed to live stream: ${name}`);
+  };
+
+  ws.onmessage = (evt) => {
+    const data = JSON.parse(evt.data);
+    if (data.tick) {
+      const pip = data.tick.pip_size || pipSize || 2;
+      const d = extractDigit(data.tick.quote, pip);
+      tickCount++;
+      const isMatch = (d === targetDigit);
+      if (isMatch) hitCount++;
+
+      document.getElementById('liveStatus').textContent = `${name} (${hitCount}/${tickCount} hits)`;
+      pill.textContent = isMatch ? `MATCH! ${d}` : `Digit: ${d}`;
+      pill.className = isMatch ? 'tick-pill hit' : 'tick-pill';
+    }
+  };
+
+  ws.onerror = () => {
+    document.getElementById('liveStatus').textContent = 'Live stream interrupted';
+  };
+}
+
+async function runFullScan() {
+  const btn = document.getElementById('scanBtn');
+  const pool = document.getElementById('poolSel').value;
+  const memCount = parseInt(document.getElementById('memSel').value, 10);
+  const targets = pool === '1s' ? MARKETS_1S : [...MARKETS_1S, ...MARKETS_STD];
+
+  btn.disabled = true;
+  btn.textContent = `SCANNING ${targets.length} MARKETS (${memCount} TICKS)...`;
+  setBadge('SCANNING', '');
+  log(`Starting AI scan across ${targets.length} markets (${memCount} ticks each)...`);
+
+  const results = [];
+  await Promise.all(targets.map(async (m) => {
+    try {
+      const { digits, pip } = await fetchHistory(m.sym, memCount);
+      const ai = evaluateMarketAI(digits);
+      results.push({ ...m, pip, ai });
+    } catch (e) {
+      log(`Skipped ${m.name}: ${e.message}`);
+    }
+  }));
+
+  btn.disabled = false;
+  btn.textContent = 'SCAN ALL MARKETS NOW';
+
+  if (results.length === 0) {
+    setBadge('OFFLINE', 'err');
+    document.getElementById('heroMarket').textContent = 'Connection blocked by browser/network';
+    log('Error: Could not reach Deriv WebSocket. Open in Samsung Internet or Firefox if using local file.');
+    return;
+  }
+
+  results.sort((a, b) => b.ai.best.score - a.ai.best.score);
+  const top = results[0];
+  const b = top.ai.best;
+  const s = top.ai.second;
+
+  setBadge('LIVE', 'ok');
+  document.getElementById('heroMarket').textContent = `TOP SIGNAL: ${top.name.toUpperCase()}`;
+  document.getElementById('heroDigit').textContent = b.digit;
+  document.getElementById('heroConf').textContent = `${b.score.toFixed(1)}%`;
+  document.getElementById('heroBackup').textContent = `Digit ${s.digit} (${s.score.toFixed(1)}%)`;
+  document.getElementById('heroMarkov').textContent = `${b.m1Pct}% next-tick`;
+  document.getElementById('heroCluster').textContent = `${b.recentCount}/30 recent | Gap ${b.gap}`;
+
+  // Render 10-digit matrix for top market
+  document.getElementById('matrixSub').textContent = top.name;
+  const byDigit = [...top.ai.all].sort((a, c) => a.digit - c.digit);
+  document.getElementById('digitMatrix').innerHTML = byDigit.map(item => {
+    const cls = item.digit === b.digit ? 'd-cell top' : (item.digit === s.digit ? 'd-cell sec' : 'd-cell');
+    return `<div class="${cls}">
+      <div class="d-num">${item.digit}</div>
+      <div class="d-score">${item.score.toFixed(0)}%</div>
+      <div class="d-freq">${item.freqPct}%</div>
+    </div>`;
+  }).join('');
+
+  // Render leaderboard
+  document.getElementById('marketBoard').innerHTML = results.map((r, idx) => `
+    <div class="mkt-row" onclick="selectMarket('${r.sym}')">
+      <div><b>#${idx + 1} ${r.name}</b></div>
+      <div>Digit <b style="color:var(--accent)">${r.ai.best.digit}</b> &bull; ${r.ai.best.score.toFixed(1)}%</div>
+    </div>
+  `).join('');
+
+  window._lastResults = results;
+  log(`Scan complete. Top pick: ${top.name} -> Digit ${b.digit} (${b.score.toFixed(1)}%).`);
+  startLiveStream(top.sym, top.name, b.digit, top.pip);
+}
+
+function selectMarket(sym) {
+  if (!window._lastResults) return;
+  const item = window._lastResults.find(r => r.sym === sym);
+  if (!item) return;
+  const b = item.ai.best;
+  const s = item.ai.second;
+  document.getElementById('heroMarket').textContent = `SELECTED: ${item.name.toUpperCase()}`;
+  document.getElementById('heroDigit').textContent = b.digit;
+  document.getElementById('heroConf').textContent = `${b.score.toFixed(1)}%`;
+  document.getElementById('heroBackup').textContent = `Digit ${s.digit} (${s.score.toFixed(1)}%)`;
+  document.getElementById('heroMarkov').textContent = `${b.m1Pct}% next-tick`;
+  document.getElementById('heroCluster').textContent = `${b.recentCount}/30 recent | Gap ${b.gap}`;
+  document.getElementById('matrixSub').textContent = item.name;
+  const byDigit = [...item.ai.all].sort((a, c) => a.digit - c.digit);
+  document.getElementById('digitMatrix').innerHTML = byDigit.map(dItem => {
+    const cls = dItem.digit === b.digit ? 'd-cell top' : (dItem.digit === s.digit ? 'd-cell sec' : 'd-cell');
+    return `<div class="${cls}">
+      <div class="d-num">${dItem.digit}</div>
+      <div class="d-score">${dItem.score.toFixed(0)}%</div>
+      <div class="d-freq">${dItem.freqPct}%</div>
+    </div>`;
+  }).join('');
+  startLiveStream(item.sym, item.name, b.digit, item.pip);
+}
+</script>
+</body>
+</html>
